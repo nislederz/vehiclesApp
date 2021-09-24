@@ -9,6 +9,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String _email = '';
+  String _password = '';
+  bool _rememberme = true;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,11 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [           
             _showLogo(),
+            SizedBox(height: 20,),
             _showEmail(),
+            _showPassword(),
+            _showRemenberme(),
+            _showButtons(),
           ],
         )
       ),
@@ -34,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _showEmail (){
     return Container(
-      padding: EdgeInsets.all(30),
+      padding: EdgeInsets.all(10),
       child: TextField(
         autofocus: true,
         keyboardType: TextInputType.emailAddress,
@@ -50,6 +56,76 @@ class _LoginScreenState extends State<LoginScreen> {
           _email = value;
           print(_email);
         },
+      ),
+    );
+  }
+
+  Widget _showPassword() {
+    return Container(
+          padding: EdgeInsets.all(10),
+          child: TextField(            
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: 'Ingresa tu password.',
+              labelText: 'Password',
+              suffixIcon: Icon(Icons.lock),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10)
+              ),
+            ),
+            onChanged: (value){
+              _password = value;
+            },
+          ),
+        );
+  }
+
+  Widget _showRemenberme() {
+    return CheckboxListTile ( 
+      title: Text('Recordarme'),
+      value : _rememberme,
+      onChanged: (value) {
+        setState(() {
+          _rememberme = value!;          
+        });
+      }, 
+    );
+  }
+
+  Widget _showButtons() {
+    return Container(
+      margin: EdgeInsets.only(left: 10, right: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          Expanded(
+            child: ElevatedButton(
+              child: Text('Iniciar Sesion'),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states){
+                    return Color(0xFF120E43);
+                  }
+                ),
+              ),
+              onPressed: (){}, 
+            ),
+          ),
+          SizedBox(width:20,),
+          Expanded(
+            child: ElevatedButton(
+              child: Text('Nuevo Usuario'),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states){
+                    return Color(0xFFE03B8B);
+                  }
+                ),
+              ),
+              onPressed: (){}, 
+            ),
+          ),
+        ],
       ),
     );
   }

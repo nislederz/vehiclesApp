@@ -6,6 +6,7 @@ import 'package:vehicles_app/helpers/constans.dart';
 import 'package:vehicles_app/models/procedure.dart';
 import 'package:vehicles_app/models/token.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class ProceduresScreen extends StatefulWidget {
   final Token token;  
@@ -33,7 +34,11 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
         title: Text('Procedimientos'),
       ),
       body: Center(
-        child: _showLoader? LoaderComponent(text: 'Por favor espere...',) :Text('Procedimientos'),
+        child: _showLoader? LoaderComponent(text: 'Por favor espere...',) :_getContent(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: (){},
       ),
     );
   }
@@ -64,7 +69,71 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
         _procedures.add(Procedure.fromJson(item));
       }
     }
-    print(_procedures);
+  }
+
+  Widget _getContent() {
+    return _procedures.length == 0
+      ? _noContent()
+      : _getListView();
+  }
+
+  Widget _noContent() {
+    return Center(
+      child: Container(
+        margin: EdgeInsets.all(20),
+        child: Text(
+          'No hay procedimientos almacenados.',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      )
+    );
+  }
+
+  Widget _getListView() {
+    return ListView(
+      children: _procedures.map((e){
+        return Card(
+          child: InkWell(
+            onTap: (){},
+            child: Container(
+              margin: EdgeInsets.all(10),
+              padding: EdgeInsets.all(5),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        e.description,
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios)
+                    ],
+                  ),
+                  SizedBox(height: 5,),
+                  Row(
+                    children: [
+                      Text(
+                        '${NumberFormat.currency(symbol: '\$').format(e.price)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
 }

@@ -18,7 +18,7 @@ class ProcedureScreen extends StatefulWidget {
 }
 
 class _ProcedureScreenState extends State<ProcedureScreen> {
-  bool _showLoader = false;
+  bool _showLoader = false;  
   String _description = '';
   String _descriptionError = '';
   bool _descriptionShowError = false;
@@ -43,7 +43,7 @@ class _ProcedureScreenState extends State<ProcedureScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar( 
-        title: Text( widget.procedure.id == 0 ? 'Nuevo Procedimiento':widget.procedure.description,),        
+        title: Text( widget.procedure.id == 0 ? 'Nuevo Procedimiento':widget.procedure.description,),          
       ),
       body: Stack(
         children: [

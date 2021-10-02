@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
 import 'package:vehicles_app/models/token.dart';
+import 'package:vehicles_app/screens/brand_screen.dart';
 import 'package:vehicles_app/screens/login_screen.dart';
 import 'package:vehicles_app/screens/procedures_screen.dart';
+
+import 'brands_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Token token;
@@ -72,7 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(
             leading: Icon(Icons.two_wheeler),
             title: const Text("Marcas"),
-            onTap: (){},
+             onTap: (){
+              Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => BrandsScreen(token: widget.token,)
+                )
+              );
+            },
           ),
            ListTile(
             leading: Icon(Icons.precision_manufacturing),

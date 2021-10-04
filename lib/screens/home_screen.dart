@@ -5,8 +5,10 @@ import 'package:vehicles_app/models/token.dart';
 import 'package:vehicles_app/screens/brand_screen.dart';
 import 'package:vehicles_app/screens/login_screen.dart';
 import 'package:vehicles_app/screens/procedures_screen.dart';
+import 'package:vehicles_app/screens/vehicletypes_screen.dart';
 
 import 'brands_screen.dart';
+import 'documenttypes_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Token token;
@@ -75,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(
             leading: Icon(Icons.two_wheeler),
             title: const Text("Marcas"),
-             onTap: (){
+            onTap: (){
               Navigator.push(
                 context, 
                 MaterialPageRoute(
@@ -99,12 +101,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(
             leading: Icon(Icons.badge),
             title: const Text("Tipos de Documento"),
-            onTap: (){},
+            onTap: (){
+              Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => DocumentTypesScreen(token: widget.token,)
+                )
+              );
+            },
           ),
           ListTile(
             leading: Icon(Icons.toys),
             title: const Text("Tipos de Vehiculos"),
-            onTap: (){},
+            onTap: (){
+              Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => VehicleTypesScreen(token: widget.token,)
+                )
+              );
+            },
           ),
           ListTile(
             leading: Icon(Icons.people),

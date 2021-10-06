@@ -124,21 +124,56 @@ class _UsersScreenState extends State<UsersScreen> {
               child: Container(
                 margin: EdgeInsets.all(10),
                 padding: EdgeInsets.all(5),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          e.fullName,
-                          style: TextStyle(
-                            fontSize: 20,
-                          ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(40),
+                      child: FadeInImage(
+                        placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
+                        //image: NetworkImage(e.imageFullPath), TODOS
+                        image: AssetImage('assets/alto_ahi_loca.jpg'),
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  e.fullName,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),  
+                                SizedBox(height: 5,),
+                                Text(
+                                  e.email,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                ), 
+                                SizedBox(height: 5,),
+                                Text(
+                                  e.phoneNumber,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                ),                        
+                              ],                      
+                            ),
+                          ],
                         ),
-                        Icon(Icons.arrow_forward_ios)
-                      ],
-                    ),                    
+                      ),
+                    ),  
+                    Icon(Icons.arrow_forward_ios)                  
                   ],
                 ),
               ),

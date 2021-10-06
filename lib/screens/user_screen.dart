@@ -7,42 +7,43 @@ import 'package:vehicles_app/models/brand.dart';
 import 'package:vehicles_app/models/procedure.dart';
 import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/models/token.dart';
+import 'package:vehicles_app/models/user.dart';
 
-class BrandScreen extends StatefulWidget {
+class UserScreen extends StatefulWidget {
   final Token token;
-  final Brand brand;
-  
-  BrandScreen({required this.token, required this.brand});
+  final User user;
+
+  const UserScreen({ required this.token, required this.user });
 
   @override
-  _BrandScreenState createState() => _BrandScreenState();
+  _UserScreenState createState() => _UserScreenState();
 }
 
-class _BrandScreenState extends State<BrandScreen> {
+class _UserScreenState extends State<UserScreen> {
   bool _showLoader = false;  
-  String _description = '';
-  String _descriptionError = '';
-  bool _descriptionShowError = false;
-  TextEditingController _descriptionController = TextEditingController();  
+  String _firstName = '';
+  String _firstNameError = '';
+  bool _firstNameShowError = false;
+  TextEditingController _firstNameController = TextEditingController();  
   
   @override
   void initState() {
     super.initState();
-    _description = widget.brand.description;
-    _descriptionController.text = _description;    
+    _firstName = widget.user.firstName;
+    _firstNameController.text = _firstName;    
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar( 
-        title: Text( widget.brand.id == 0 ? 'Nueva Marca':widget.brand.description,),          
+        title: Text( widget.user.id.isEmpty? 'Nuevo Usuario':widget.user.fullName,),          
       ),
       body: Stack(
         children: [
           Column(
             children: <Widget>[
-                _showDescription(),           
+                _showFirstName(),           
                 _showButtons(),
             ],
           ),
@@ -52,22 +53,22 @@ class _BrandScreenState extends State<BrandScreen> {
     );
   }
 
-  Widget _showDescription() {
+  Widget _showFirstName() {
     return Container(
       padding: EdgeInsets.all(10),
       child: TextField(
-        controller: _descriptionController,
+        controller: _firstNameController,
         decoration: InputDecoration(
-          hintText: 'Ingresa una descripcion.',
-          labelText: 'Descripcion',
-          errorText: _descriptionShowError ? _descriptionError: null,
-          suffixIcon: Icon(Icons.description),
+          hintText: 'Ingrese nombres...',
+          labelText: 'Nombres',
+          errorText: _firstNameShowError ? _firstNameError: null,
+          suffixIcon: Icon(Icons.person),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10)
           ),
         ),
         onChanged: (value){
-          _description = value;
+          _firstName = value;
         },
       ),
     );
@@ -92,10 +93,10 @@ class _BrandScreenState extends State<BrandScreen> {
               onPressed: () => _save(), 
             ),
           ),
-          widget.brand.id == 0 
+          widget.user.id.isEmpty
             ?Container()
             :SizedBox(width:20,),
-          widget.brand.id == 0
+          widget.user.id.isEmpty
             ?Container()
             :Expanded(
               child: ElevatedButton(
@@ -120,19 +121,19 @@ class _BrandScreenState extends State<BrandScreen> {
       return;
     }
 
-    widget.brand.id == 0? _addRecord() : _saveRecord();
+    widget.user.id.isEmpty ? _addRecord() : _saveRecord();
   }
 
   bool _validateFields() {
      bool isValid = true;
 
-    if(_description.isEmpty){
+    if(_firstName.isEmpty){
       isValid = false;
-      _descriptionShowError = true;
-      _descriptionError = 'Debes ingresar una descripcion.';
+      _firstNameShowError = true;
+      _firstNameError = 'Debes ingresar almenos un nombre.';
     }   
     else{
-      _descriptionShowError = false;
+      _firstNameShowError = false;
     }
 
     setState(() {});
@@ -145,12 +146,11 @@ class _BrandScreenState extends State<BrandScreen> {
     });
     
     Map<String, dynamic> request ={
-      'id': widget.brand.id,
-      'description': _description,
+      'firstName': _firstName,
     };
 
     Response response = await ApiHelper.post(
-      '/api/Brands/', 
+      '/api/Users/', 
       request, 
       widget.token.token
     );
@@ -180,13 +180,13 @@ class _BrandScreenState extends State<BrandScreen> {
     });
     
     Map<String, dynamic> request ={
-      'id': widget.brand.id,
-      'description': _description,
+      'id': widget.user.id,
+      'firstName': _firstName,
     };
 
     Response response = await ApiHelper.put(
-      '/api/Brands/', 
-      widget.brand.id.toString(), 
+      '/api/Users/', 
+      widget.user.id, 
       request, 
       widget.token.token
     );
@@ -233,8 +233,8 @@ class _BrandScreenState extends State<BrandScreen> {
     });
     
     Response response = await ApiHelper.delete(
-      '/api/Brands/', 
-      widget.brand.id.toString(), 
+      '/api/Users/', 
+      widget.user.id, 
       widget.token.token
     );
 

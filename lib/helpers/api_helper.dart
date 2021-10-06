@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:vehicles_app/models/document_type.dart';
+import 'package:vehicles_app/models/user.dart';
 import 'package:vehicles_app/models/vehicle_type.dart';
 import 'package:vehicles_app/models/brand.dart';
 import 'package:vehicles_app/models/procedure.dart';
@@ -8,6 +9,34 @@ import 'constans.dart';
 import 'package:http/http.dart' as http;
 
 class ApiHelper{
+  static Future<Response> getUsers(String token) async{
+    var url = Uri.parse('${Constans.apiUrl}/api/Users');
+    var response = await http.get(
+      url,
+      headers:{
+        'content-type':'application/json',
+        'accept': 'application/json',
+        'authorization': 'bearer $token',
+      },
+    );
+
+    var body =response.body;
+
+    if(response.statusCode >= 400){
+      return Response(isSuccess: false, message: body);
+    }
+
+    List<User> list = [];
+    var decodeJson = jsonDecode(body);
+    if(decodeJson != null){
+      for(var item in decodeJson){
+       list.add(User.fromJson(item));
+      }
+    }
+
+    return Response(isSuccess: true, result: list);
+  }
+
   static Future<Response> getVehicleTypes(String token) async{
     var url = Uri.parse('${Constans.apiUrl}/api/VehicleTypes');
     var response = await http.get(

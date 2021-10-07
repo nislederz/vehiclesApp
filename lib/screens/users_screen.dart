@@ -126,11 +126,17 @@ class _UsersScreenState extends State<UsersScreen> {
                 padding: EdgeInsets.all(5),
                 child: Row(
                   children: [
-                    ClipRRect(
+                    e.imageFullPath.isEmpty
+                    ?Image(
+                      image: AssetImage('assets/alto_ahi_loca.jpg'),
+                      width: 160,
+                      height: 160,
+                    )
+                    :ClipRRect(
                       borderRadius: BorderRadius.circular(40),
                       child: FadeInImage(
                         placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
-                        //image: NetworkImage(e.imageFullPath), TODOS
+                        //image: NetworkImage(e.imageFullPath), //TODOS
                         image: AssetImage('assets/alto_ahi_loca.jpg'),
                         width: 80,
                         height: 80,

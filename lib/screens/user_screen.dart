@@ -1,3 +1,5 @@
+import 'package:camera/camera.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +11,7 @@ import 'package:vehicles_app/models/procedure.dart';
 import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/models/token.dart';
 import 'package:vehicles_app/models/user.dart';
+import 'package:vehicles_app/screens/take_picture_screen.dart';
 
 class UserScreen extends StatefulWidget {
   final Token token;
@@ -33,7 +36,9 @@ class _UserScreenState extends State<UserScreen> {
   bool _lastNameShowError = false;
   TextEditingController _lastNameController = TextEditingController();  
 
-  DocumentType _documentType = DocumentType(id: 0, description: '');
+  int _documentTypeId = 0;
+  String _documentTypeIdError = '';
+  bool _documentTypeIdShowError = false;
   List<DocumentType> _documentTypes = [];
 
   String _document = '';
@@ -59,13 +64,15 @@ class _UserScreenState extends State<UserScreen> {
   @override
   void initState() {
     super.initState();
+    _getDocumentTypes();
+
     _firstName = widget.user.firstName;
     _firstNameController.text = _firstName;    
 
     _lastName = widget.user.lastName;
     _lastNameController.text = _lastName;  
 
-    _documentType = widget.user.documentType; 
+    _documentTypeId = widget.user.documentType.id; 
 
     _document = widget.user.document;
     _documentController.text = _document;  
@@ -192,6 +199,65 @@ class _UserScreenState extends State<UserScreen> {
       _firstNameShowError = false;
     }
 
+    if(_lastName.isEmpty){
+      isValid = false;
+      _lastNameShowError = true;
+      _lastNameError = 'Debes ingresar almenos un apellido.';
+    }   
+    else{
+     _lastNameShowError = false;
+    }
+
+    if(_documentTypeId == 0){
+      isValid = false;
+      _documentTypeIdShowError = true;
+      _documentTypeIdError = 'Debes escoger el tipo de documento';
+    }   
+    else{
+      _documentTypeIdShowError = false;
+    }
+
+    if(_document.isEmpty){
+      isValid = false;
+      _documentShowError = true;
+      _documentError = 'Debes ingresar el numero del documento';
+    }   
+    else{
+      _documentShowError = false;
+    }
+
+    if(_email.isEmpty){
+      isValid = false;
+      _emailShowError = true;
+      _emailError = 'Debes ingresar un email.';
+    }
+    else if (!EmailValidator.validate(_email)){
+      isValid = false;
+      _emailShowError = true;
+      _emailError = 'Debes ingresar un email valido.';
+    }
+    else{
+      _emailShowError = false;
+    }
+
+    if(_adress.isEmpty){
+      isValid = false;
+       _adressShowError = true;
+      _adressError = 'Debes ingresar una direccion';
+    }   
+    else{
+      _adressShowError = false;
+    }
+
+    if(_phoneNumber.isEmpty){
+      isValid = false;
+      _phoneNumberShowError = true;
+      _phoneNumberError = 'Debes ingresar el numero del documento';
+    }   
+    else{
+     _phoneNumberShowError = false;
+    }
+
     setState(() {});
     return isValid;    
   }
@@ -203,6 +269,13 @@ class _UserScreenState extends State<UserScreen> {
     
     Map<String, dynamic> request ={
       'firstName': _firstName,
+      'lastName': _lastName,
+      'document': _document,
+      'email': _email,
+      'userName': _email,
+      'adress': _adress,
+      'phoneNumber': _phoneNumber,
+      'documentType': _documentTypeId,      
     };
 
     Response response = await ApiHelper.post(
@@ -238,6 +311,13 @@ class _UserScreenState extends State<UserScreen> {
     Map<String, dynamic> request ={
       'id': widget.user.id,
       'firstName': _firstName,
+      'lastName': _lastName,
+      'document': _document,
+      'email': _email,
+      'userName': _email,
+      'adress': _adress,
+      'phoneNumber': _phoneNumber,
+      'documentType':_documentTypeId,        
     };
 
     Response response = await ApiHelper.put(
@@ -314,23 +394,26 @@ class _UserScreenState extends State<UserScreen> {
   }
 
   Widget _showPhoto() {
-    return Container(
-      margin: EdgeInsets.only(top: 15,),
-      child: widget.user.id.isEmpty
-      ?Image(
-        image: AssetImage('assets/alto_ahi_loca.jpg'),
-        width: 160,
-        height: 160,
-      )
-      :ClipRRect(
-        borderRadius: BorderRadius.circular(80),
-        child: FadeInImage(
-          placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
-          //image: NetworkImage(widget.user.imageFullPath), //TODOS
+    return InkWell(
+      onTap: ()=> _takePicture(),
+      child: Container(
+        margin: EdgeInsets.only(top: 15,),
+        child: widget.user.id.isEmpty
+        ?Image(
           image: AssetImage('assets/alto_ahi_loca.jpg'),
           width: 160,
           height: 160,
-          fit: BoxFit.cover,
+        )
+        :ClipRRect(
+          borderRadius: BorderRadius.circular(80),
+          child: FadeInImage(
+            placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
+            //image: NetworkImage(widget.user.imageFullPath), //TODOS
+            image: AssetImage('assets/alto_ahi_loca.jpg'),
+            width: 160,
+            height: 160,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
@@ -359,7 +442,24 @@ class _UserScreenState extends State<UserScreen> {
 
   Widget _showDocumentType() {
     return Container(
-
+      padding: EdgeInsets.all(10),
+      child: _documentTypes.length == 0
+        ? Text('Cargando tipos de documento')
+        : DropdownButtonFormField(
+          items: _getComboDocumentTypes(),
+          value: _documentTypeId,
+          onChanged: (option){
+            _documentTypeId = option as int;
+          },
+          decoration: InputDecoration(
+            hintText: 'Seleccione un tipo de documento...',
+            labelText: 'Tipo documento',
+            errorText: _documentTypeIdShowError? _documentTypeIdError : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10)
+            )
+          ),
+        ),
     );
   }
 
@@ -450,4 +550,61 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  Future<Null> _getDocumentTypes() async{
+    setState(() {
+      _showLoader= true;  
+    });
+
+    Response response = await ApiHelper.getDocumentTypes(widget.token.token);
+
+    setState(() {
+      _showLoader= false;
+    });
+
+    if(!response.isSuccess){
+      await showAlertDialog(
+        context: context,
+        title: 'Error',
+        message: response.message,
+        actions: <AlertDialogAction>[
+          AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );
+      return;
+    }   
+
+    setState(() {
+      _documentTypes = response.result;
+    });
+
+  }
+
+  List<DropdownMenuItem<int>> _getComboDocumentTypes() {
+    List<DropdownMenuItem<int>> list = [];
+    list.add(DropdownMenuItem(
+      child: Text('Seleccione un tipo de documento.'),
+      value: 0,
+    ));
+
+    _documentTypes.forEach((documentType) {
+      list.add(DropdownMenuItem(
+        child: Text(documentType.description),
+        value: documentType.id,
+      ));
+    });
+
+   return list;  
+  }
+
+  void _takePicture() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    final cameras = await availableCameras();
+    final firstCamera = cameras.first;
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(camera: firstCamera,)
+      )
+    );
+  }
 }

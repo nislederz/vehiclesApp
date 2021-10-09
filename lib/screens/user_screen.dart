@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
@@ -17,24 +19,27 @@ class UserScreen extends StatefulWidget {
   final Token token;
   final User user;
 
-  const UserScreen({ required this.token, required this.user });
+  const UserScreen({required this.token, required this.user});
 
   @override
   _UserScreenState createState() => _UserScreenState();
 }
 
 class _UserScreenState extends State<UserScreen> {
-  bool _showLoader = false;  
+  bool _showLoader = false;
+
+  bool _photoChange = false;
+  late XFile _image;
 
   String _firstName = '';
   String _firstNameError = '';
   bool _firstNameShowError = false;
-  TextEditingController _firstNameController = TextEditingController();  
+  TextEditingController _firstNameController = TextEditingController();
 
   String _lastName = '';
   String _lastNameError = '';
   bool _lastNameShowError = false;
-  TextEditingController _lastNameController = TextEditingController();  
+  TextEditingController _lastNameController = TextEditingController();
 
   int _documentTypeId = 0;
   String _documentTypeIdError = '';
@@ -44,73 +49,77 @@ class _UserScreenState extends State<UserScreen> {
   String _document = '';
   String _documentError = '';
   bool _documentShowError = false;
-  TextEditingController _documentController = TextEditingController();  
+  TextEditingController _documentController = TextEditingController();
 
   String _adress = '';
   String _adressError = '';
   bool _adressShowError = false;
-  TextEditingController _adressController = TextEditingController();  
+  TextEditingController _adressController = TextEditingController();
 
   String _email = '';
   String _emailError = '';
   bool _emailShowError = false;
-  TextEditingController _emailController = TextEditingController(); 
+  TextEditingController _emailController = TextEditingController();
 
   String _phoneNumber = '';
   String _phoneNumberError = '';
   bool _phoneNumberShowError = false;
-  TextEditingController _phoneNumberController = TextEditingController();  
-  
+  TextEditingController _phoneNumberController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _getDocumentTypes();
 
     _firstName = widget.user.firstName;
-    _firstNameController.text = _firstName;    
+    _firstNameController.text = _firstName;
 
     _lastName = widget.user.lastName;
-    _lastNameController.text = _lastName;  
+    _lastNameController.text = _lastName;
 
-    _documentTypeId = widget.user.documentType.id; 
+    _documentTypeId = widget.user.documentType.id;
 
     _document = widget.user.document;
-    _documentController.text = _document;  
+    _documentController.text = _document;
 
     _adress = widget.user.address;
-    _adressController.text = _adress;  
+    _adressController.text = _adress;
 
     _email = widget.user.email;
-    _emailController.text = _email;  
+    _emailController.text = _email;
 
     _phoneNumber = widget.user.phoneNumber;
-    _phoneNumberController.text = _phoneNumber;  
+    _phoneNumberController.text = _phoneNumber;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( 
-        title: Text( widget.user.id.isEmpty? 'Nuevo Usuario':widget.user.fullName,),          
+      appBar: AppBar(
+        title: Text(
+          widget.user.id.isEmpty ? 'Nuevo Usuario' : widget.user.fullName,
+        ),
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
             child: Column(
               children: <Widget>[
-                  _showPhoto(),           
-                  _showFirstName(),   
-                  _showLastName(),  
-                  _showDocumentType(),                         
-                  _showDocument(),     
-                  _showEmail(), 
-                  _showAddress(), 
-                  _showPhoneNumber(), 
-                  _showButtons(),
+                _showPhoto(),
+                _showFirstName(),
+                _showLastName(),
+                _showDocumentType(),
+                _showDocument(),
+                _showEmail(),
+                _showAddress(),
+                _showPhoneNumber(),
+                _showButtons(),
               ],
             ),
           ),
-          _showLoader? LoaderComponent(text: 'Por favor espere...'): Container(),
+          _showLoader
+              ? LoaderComponent(text: 'Por favor espere...')
+              : Container(),
         ],
       ),
     );
@@ -124,13 +133,11 @@ class _UserScreenState extends State<UserScreen> {
         decoration: InputDecoration(
           hintText: 'Ingrese nombres...',
           labelText: 'Nombres',
-          errorText: _firstNameShowError ? _firstNameError: null,
+          errorText: _firstNameShowError ? _firstNameError : null,
           suffixIcon: Icon(Icons.person),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _firstName = value;
         },
       ),
@@ -148,39 +155,39 @@ class _UserScreenState extends State<UserScreen> {
               child: Text('Guardar.'),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states){
-                    return Color(0xFF120E43);
-                  }
-                ),
+                    (Set<MaterialState> states) {
+                  return Color(0xFF120E43);
+                }),
               ),
-              onPressed: () => _save(), 
+              onPressed: () => _save(),
             ),
           ),
           widget.user.id.isEmpty
-            ?Container()
-            :SizedBox(width:20,),
+              ? Container()
+              : SizedBox(
+                  width: 20,
+                ),
           widget.user.id.isEmpty
-            ?Container()
-            :Expanded(
-              child: ElevatedButton(
-                child: Text('Borrar'),
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                    (Set<MaterialState> states){
-                      return Color(0xFFB4161B);
-                    }
+              ? Container()
+              : Expanded(
+                  child: ElevatedButton(
+                    child: Text('Borrar'),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                        return Color(0xFFB4161B);
+                      }),
+                    ),
+                    onPressed: () => _confirmDelete(),
                   ),
                 ),
-                onPressed: () => _confirmDelete(), 
-              ),
-            ),
         ],
       ),
     );
   }
 
   void _save() {
-    if(!_validateFields()){
+    if (!_validateFields()) {
       return;
     }
 
@@ -188,86 +195,78 @@ class _UserScreenState extends State<UserScreen> {
   }
 
   bool _validateFields() {
-     bool isValid = true;
+    bool isValid = true;
 
-    if(_firstName.isEmpty){
+    if (_firstName.isEmpty) {
       isValid = false;
       _firstNameShowError = true;
       _firstNameError = 'Debes ingresar almenos un nombre.';
-    }   
-    else{
+    } else {
       _firstNameShowError = false;
     }
 
-    if(_lastName.isEmpty){
+    if (_lastName.isEmpty) {
       isValid = false;
       _lastNameShowError = true;
       _lastNameError = 'Debes ingresar almenos un apellido.';
-    }   
-    else{
-     _lastNameShowError = false;
+    } else {
+      _lastNameShowError = false;
     }
 
-    if(_documentTypeId == 0){
+    if (_documentTypeId == 0) {
       isValid = false;
       _documentTypeIdShowError = true;
       _documentTypeIdError = 'Debes escoger el tipo de documento';
-    }   
-    else{
+    } else {
       _documentTypeIdShowError = false;
     }
 
-    if(_document.isEmpty){
+    if (_document.isEmpty) {
       isValid = false;
       _documentShowError = true;
       _documentError = 'Debes ingresar el numero del documento';
-    }   
-    else{
+    } else {
       _documentShowError = false;
     }
 
-    if(_email.isEmpty){
+    if (_email.isEmpty) {
       isValid = false;
       _emailShowError = true;
       _emailError = 'Debes ingresar un email.';
-    }
-    else if (!EmailValidator.validate(_email)){
+    } else if (!EmailValidator.validate(_email)) {
       isValid = false;
       _emailShowError = true;
       _emailError = 'Debes ingresar un email valido.';
-    }
-    else{
+    } else {
       _emailShowError = false;
     }
 
-    if(_adress.isEmpty){
+    if (_adress.isEmpty) {
       isValid = false;
-       _adressShowError = true;
+      _adressShowError = true;
       _adressError = 'Debes ingresar una direccion';
-    }   
-    else{
+    } else {
       _adressShowError = false;
     }
 
-    if(_phoneNumber.isEmpty){
+    if (_phoneNumber.isEmpty) {
       isValid = false;
       _phoneNumberShowError = true;
       _phoneNumberError = 'Debes ingresar el numero del documento';
-    }   
-    else{
-     _phoneNumberShowError = false;
+    } else {
+      _phoneNumberShowError = false;
     }
 
     setState(() {});
-    return isValid;    
+    return isValid;
   }
 
-  _addRecord() async{
+  _addRecord() async {
     setState(() {
       _showLoader = true;
     });
-    
-    Map<String, dynamic> request ={
+
+    Map<String, dynamic> request = {
       'firstName': _firstName,
       'lastName': _lastName,
       'document': _document,
@@ -275,40 +274,36 @@ class _UserScreenState extends State<UserScreen> {
       'userName': _email,
       'adress': _adress,
       'phoneNumber': _phoneNumber,
-      'documentType': _documentTypeId,      
+      'documentType': _documentTypeId,
     };
 
-    Response response = await ApiHelper.post(
-      '/api/Users/', 
-      request, 
-      widget.token.token
-    );
+    Response response =
+        await ApiHelper.post('/api/Users/', request, widget.token.token);
 
     setState(() {
       _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
-        context: context,
-        title: 'Error',
-        message: response.message,
-        actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );
+          context: context,
+          title: 'Error',
+          message: response.message,
+          actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+          ]);
       return;
-    }   
+    }
 
-    Navigator.pop(context, 'yes') ;
+    Navigator.pop(context, 'yes');
   }
 
   _saveRecord() async {
     setState(() {
       _showLoader = true;
     });
-    
-    Map<String, dynamic> request ={
+
+    Map<String, dynamic> request = {
       'id': widget.user.id,
       'firstName': _firstName,
       'lastName': _lastName,
@@ -317,105 +312,121 @@ class _UserScreenState extends State<UserScreen> {
       'userName': _email,
       'adress': _adress,
       'phoneNumber': _phoneNumber,
-      'documentType':_documentTypeId,        
+      'documentType': _documentTypeId,
     };
 
     Response response = await ApiHelper.put(
-      '/api/Users/', 
-      widget.user.id, 
-      request, 
-      widget.token.token
-    );
+        '/api/Users/', widget.user.id, request, widget.token.token);
 
     setState(() {
       _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
-        context: context,
-        title: 'Error',
-        message: response.message,
-        actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );
+          context: context,
+          title: 'Error',
+          message: response.message,
+          actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+          ]);
       return;
-    }   
+    }
 
-    Navigator.pop(context, 'yes') ;
+    Navigator.pop(context, 'yes');
   }
 
   void _confirmDelete() async {
     var response = await showAlertDialog(
-      context: context,
-      title: 'Comfirmacion',
-      message: 'Estas seguro de borrar el registro?',
-      actions: <AlertDialogAction>[
-        AlertDialogAction(key: 'no', label: 'No'),
-        AlertDialogAction(key: 'yes', label: 'Si'),
-      ]
-    );
+        context: context,
+        title: 'Comfirmacion',
+        message: 'Estas seguro de borrar el registro?',
+        actions: <AlertDialogAction>[
+          AlertDialogAction(key: 'no', label: 'No'),
+          AlertDialogAction(key: 'yes', label: 'Si'),
+        ]);
 
-    if(response == 'yes'){
+    if (response == 'yes') {
       _deleteRecord();
     }
-
   }
 
-  void _deleteRecord() async{
+  void _deleteRecord() async {
     setState(() {
       _showLoader = true;
     });
-    
+
     Response response = await ApiHelper.delete(
-      '/api/Users/', 
-      widget.user.id, 
-      widget.token.token
-    );
+        '/api/Users/', widget.user.id, widget.token.token);
 
     setState(() {
       _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
-        context: context,
-        title: 'Error',
-        message: response.message,
-        actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );
+          context: context,
+          title: 'Error',
+          message: response.message,
+          actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+          ]);
       return;
-    }   
+    }
 
-    Navigator.pop(context, 'yes') ;
+    Navigator.pop(context, 'yes');
   }
 
   Widget _showPhoto() {
     return InkWell(
-      onTap: ()=> _takePicture(),
-      child: Container(
-        margin: EdgeInsets.only(top: 15,),
-        child: widget.user.id.isEmpty
-        ?Image(
-          image: AssetImage('assets/alto_ahi_loca.jpg'),
-          width: 160,
-          height: 160,
-        )
-        :ClipRRect(
-          borderRadius: BorderRadius.circular(80),
-          child: FadeInImage(
-            placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
-            //image: NetworkImage(widget.user.imageFullPath), //TODOS
-            image: AssetImage('assets/alto_ahi_loca.jpg'),
-            width: 160,
-            height: 160,
-            fit: BoxFit.cover,
-          ),
+      onTap: () => _takePicture(),
+      child: Stack(
+        children: <Widget>[
+        Container(
+          margin: EdgeInsets.only(top: 15,),
+          child: widget.user.id.isEmpty && !_photoChange
+              ? Image(
+                  image: AssetImage('assets/alto_ahi_loca.jpg'),
+                  width: 160,
+                  height: 160,
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(80),
+                  child: _photoChange 
+                  ?Image.file(
+                    File(_image.path),  
+                    width: 160,
+                    height: 160,
+                    fit: BoxFit.cover,
+                  )
+                  :FadeInImage(
+                    placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
+                    //image: NetworkImage(widget.user.imageFullPath), //TODOS
+                    image: AssetImage('assets/alto_ahi_loca.jpg'),
+                    width: 160,
+                    height: 160,
+                    fit: BoxFit.cover,
+                  ),
+              ),
         ),
-      ),
+        Positioned(
+          bottom: 0,
+          left: 100,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Container(
+              color: Colors.green[50],
+              height: 60,
+              width: 60,
+              child: Icon(
+                Icons.photo_camera,
+                size: 40,
+                color: Colors.blue,
+              ),
+            ),
+          )
+        )
+      ]),
     );
   }
 
@@ -427,13 +438,11 @@ class _UserScreenState extends State<UserScreen> {
         decoration: InputDecoration(
           hintText: 'Ingrese apellidos...',
           labelText: 'Apellidos',
-          errorText: _lastNameShowError ? _lastNameError: null,
+          errorText: _lastNameShowError ? _lastNameError : null,
           suffixIcon: Icon(Icons.person),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _lastName = value;
         },
       ),
@@ -444,22 +453,21 @@ class _UserScreenState extends State<UserScreen> {
     return Container(
       padding: EdgeInsets.all(10),
       child: _documentTypes.length == 0
-        ? Text('Cargando tipos de documento')
-        : DropdownButtonFormField(
-          items: _getComboDocumentTypes(),
-          value: _documentTypeId,
-          onChanged: (option){
-            _documentTypeId = option as int;
-          },
-          decoration: InputDecoration(
-            hintText: 'Seleccione un tipo de documento...',
-            labelText: 'Tipo documento',
-            errorText: _documentTypeIdShowError? _documentTypeIdError : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10)
-            )
-          ),
-        ),
+          ? Text('Cargando tipos de documento')
+          : DropdownButtonFormField(
+              items: _getComboDocumentTypes(),
+              value: _documentTypeId,
+              onChanged: (option) {
+                _documentTypeId = option as int;
+              },
+              decoration: InputDecoration(
+                  hintText: 'Seleccione un tipo de documento...',
+                  labelText: 'Tipo documento',
+                  errorText:
+                      _documentTypeIdShowError ? _documentTypeIdError : null,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10))),
+            ),
     );
   }
 
@@ -471,13 +479,11 @@ class _UserScreenState extends State<UserScreen> {
         decoration: InputDecoration(
           hintText: 'Ingresa documento...',
           labelText: 'Documento',
-          errorText: _documentShowError ? _documentError: null,
+          errorText: _documentShowError ? _documentError : null,
           suffixIcon: Icon(Icons.assignment_ind),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _document = value;
         },
       ),
@@ -493,13 +499,11 @@ class _UserScreenState extends State<UserScreen> {
         decoration: InputDecoration(
           hintText: 'Ingresa el Email...',
           labelText: 'Email',
-          errorText: _emailShowError ? _emailError: null,
+          errorText: _emailShowError ? _emailError : null,
           suffixIcon: Icon(Icons.mail),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _email = value;
         },
       ),
@@ -515,13 +519,11 @@ class _UserScreenState extends State<UserScreen> {
         decoration: InputDecoration(
           hintText: 'Ingresa tu direccion...',
           labelText: 'Direccion',
-          errorText: _adressShowError ? _adressError: null,
+          errorText: _adressShowError ? _adressError : null,
           suffixIcon: Icon(Icons.home),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _adress = value;
         },
       ),
@@ -529,7 +531,7 @@ class _UserScreenState extends State<UserScreen> {
   }
 
   Widget _showPhoneNumber() {
-     return Container(
+    return Container(
       padding: EdgeInsets.all(10),
       child: TextField(
         keyboardType: TextInputType.phone,
@@ -537,46 +539,42 @@ class _UserScreenState extends State<UserScreen> {
         decoration: InputDecoration(
           hintText: 'Ingresa tu telefono...',
           labelText: 'Telefono',
-          errorText: _phoneNumberShowError ? _phoneNumberError: null,
+          errorText: _phoneNumberShowError ? _phoneNumberError : null,
           suffixIcon: Icon(Icons.phone),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _phoneNumber = value;
         },
       ),
     );
   }
 
-  Future<Null> _getDocumentTypes() async{
+  Future<Null> _getDocumentTypes() async {
     setState(() {
-      _showLoader= true;  
+      _showLoader = true;
     });
 
     Response response = await ApiHelper.getDocumentTypes(widget.token.token);
 
     setState(() {
-      _showLoader= false;
+      _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
-        context: context,
-        title: 'Error',
-        message: response.message,
-        actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );
+          context: context,
+          title: 'Error',
+          message: response.message,
+          actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+          ]);
       return;
-    }   
+    }
 
     setState(() {
       _documentTypes = response.result;
     });
-
   }
 
   List<DropdownMenuItem<int>> _getComboDocumentTypes() {
@@ -593,18 +591,27 @@ class _UserScreenState extends State<UserScreen> {
       ));
     });
 
-   return list;  
+    return list;
   }
 
   void _takePicture() async {
     WidgetsFlutterBinding.ensureInitialized();
     final cameras = await availableCameras();
     final firstCamera = cameras.first;
-    Navigator.push(
-      context, 
-      MaterialPageRoute(
-        builder: (context) => TakePictureScreen(camera: firstCamera,)
-      )
+    Response? response = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => TakePictureScreen(
+                  camera: firstCamera,
+            )
+        )
     );
+
+    if(response != null){
+      setState(() {
+        _photoChange = true;
+        _image = response.result;
+      });
+    }
   }
 }

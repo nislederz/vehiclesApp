@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:vehicles_app/components/loader_component.dart';
 import 'package:vehicles_app/helpers/api_helper.dart';
 import 'package:vehicles_app/models/brand.dart';
@@ -266,6 +269,28 @@ class _UserScreenState extends State<UserScreen> {
       _showLoader = true;
     });
 
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
+
+    String base64image = '';
+    if(_photoChange){
+      List<int> imageBytes = await _image.readAsBytes();
+      base64image =base64Encode(imageBytes);
+    }
+
     Map<String, dynamic> request = {
       'firstName': _firstName,
       'lastName': _lastName,
@@ -274,11 +299,12 @@ class _UserScreenState extends State<UserScreen> {
       'userName': _email,
       'adress': _adress,
       'phoneNumber': _phoneNumber,
-      'documentType': _documentTypeId,
+      'documentTypeId': _documentTypeId,
+      'image': base64image
     };
 
     Response response =
-        await ApiHelper.post('/api/Users/', request, widget.token.token);
+        await ApiHelper.post('/api/Users/', request, widget.token);
 
     setState(() {
       _showLoader = false;
@@ -303,6 +329,28 @@ class _UserScreenState extends State<UserScreen> {
       _showLoader = true;
     });
 
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
+
+    String base64image = '';
+    if(_photoChange){
+      List<int> imageBytes = await _image.readAsBytes();
+      base64image =base64Encode(imageBytes);
+    }
+
     Map<String, dynamic> request = {
       'id': widget.user.id,
       'firstName': _firstName,
@@ -312,11 +360,12 @@ class _UserScreenState extends State<UserScreen> {
       'userName': _email,
       'adress': _adress,
       'phoneNumber': _phoneNumber,
-      'documentType': _documentTypeId,
+      'documentTypeId': _documentTypeId,
+      'image': base64image,
     };
 
     Response response = await ApiHelper.put(
-        '/api/Users/', widget.user.id, request, widget.token.token);
+        '/api/Users/', widget.user.id, request, widget.token);
 
     setState(() {
       _showLoader = false;
@@ -356,8 +405,24 @@ class _UserScreenState extends State<UserScreen> {
       _showLoader = true;
     });
 
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
+
     Response response = await ApiHelper.delete(
-        '/api/Users/', widget.user.id, widget.token.token);
+        '/api/Users/', widget.user.id, widget.token);
 
     setState(() {
       _showLoader = false;
@@ -378,56 +443,76 @@ class _UserScreenState extends State<UserScreen> {
   }
 
   Widget _showPhoto() {
-    return InkWell(
-      onTap: () => _takePicture(),
-      child: Stack(
-        children: <Widget>[
-        Container(
-          margin: EdgeInsets.only(top: 15,),
-          child: widget.user.id.isEmpty && !_photoChange
-              ? Image(
+    return Stack(
+      children: <Widget>[
+      Container(
+        margin: EdgeInsets.only(top: 15,),
+        child: widget.user.id.isEmpty && !_photoChange
+            ? Image(
+                image: AssetImage('assets/alto_ahi_loca.jpg'),
+                width: 160,
+                height: 160,
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(80),
+                child: _photoChange 
+                ?Image.file(
+                  File(_image.path),  
+                  width: 160,
+                  height: 160,
+                  fit: BoxFit.cover,
+                )
+                :FadeInImage(
+                  placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
+                  //image: NetworkImage(widget.user.imageFullPath), //TODOS
                   image: AssetImage('assets/alto_ahi_loca.jpg'),
                   width: 160,
                   height: 160,
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(80),
-                  child: _photoChange 
-                  ?Image.file(
-                    File(_image.path),  
-                    width: 160,
-                    height: 160,
-                    fit: BoxFit.cover,
-                  )
-                  :FadeInImage(
-                    placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
-                    //image: NetworkImage(widget.user.imageFullPath), //TODOS
-                    image: AssetImage('assets/alto_ahi_loca.jpg'),
-                    width: 160,
-                    height: 160,
-                    fit: BoxFit.cover,
-                  ),
-              ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 100,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: Container(
-              color: Colors.green[50],
-              height: 60,
-              width: 60,
-              child: Icon(
-                Icons.photo_camera,
-                size: 40,
-                color: Colors.blue,
+                  fit: BoxFit.cover,
+                ),
+            ),
+      ),
+      Positioned(
+        bottom: 0,
+        left: 100,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            color: Colors.green[50],
+            height: 60,
+            width: 60,
+            child: Icon(
+              Icons.photo_camera,
+              size: 40,
+              color: Colors.blue,
+            ),
+          ),
+        )
+      ),
+      Positioned(
+        bottom: 0,
+        left: 00,
+        child: InkWell(
+          onTap: ()=> _takePicture(),
+          child: InkWell(
+            onTap: ()=> _selectPicture(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: Container(
+                color: Colors.green[50],
+                height: 60,
+                width: 60,
+                child: Icon(
+                  Icons.image,
+                  size: 40,
+                  color: Colors.blue,
+                ),
               ),
             ),
-          )
+          ),
         )
-      ]),
-    );
+      )
+    ]);
   }
 
   Widget _showLastName() {
@@ -494,6 +579,7 @@ class _UserScreenState extends State<UserScreen> {
     return Container(
       padding: EdgeInsets.all(10),
       child: TextField(
+        enabled: widget.user.id.isEmpty,
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
@@ -555,7 +641,23 @@ class _UserScreenState extends State<UserScreen> {
       _showLoader = true;
     });
 
-    Response response = await ApiHelper.getDocumentTypes(widget.token.token);
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
+
+    Response response = await ApiHelper.getDocumentTypes();
 
     setState(() {
       _showLoader = false;
@@ -611,6 +713,17 @@ class _UserScreenState extends State<UserScreen> {
       setState(() {
         _photoChange = true;
         _image = response.result;
+      });
+    }
+  }
+
+  void _selectPicture() async{
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if(image != null){
+      setState(() {
+        _photoChange = true;
+        _image = image;        
       });
     }
   }

@@ -1,4 +1,5 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:vehicles_app/components/loader_component.dart';
@@ -190,6 +191,22 @@ class _ProcedureScreenState extends State<ProcedureScreen> {
     setState(() {
       _showLoader = true;
     });
+
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
     
     Map<String, dynamic> request ={
       'id': widget.procedure.id,
@@ -200,7 +217,7 @@ class _ProcedureScreenState extends State<ProcedureScreen> {
     Response response = await ApiHelper.post(
       '/api/Procedures/', 
       request, 
-      widget.token.token
+      widget.token
     );
 
     setState(() {
@@ -226,6 +243,22 @@ class _ProcedureScreenState extends State<ProcedureScreen> {
     setState(() {
       _showLoader = true;
     });
+
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
     
     Map<String, dynamic> request ={
       'id': widget.procedure.id,
@@ -237,7 +270,7 @@ class _ProcedureScreenState extends State<ProcedureScreen> {
       '/api/Procedures/', 
       widget.procedure.id.toString(), 
       request, 
-      widget.token.token
+      widget.token
     );
 
     setState(() {
@@ -280,11 +313,27 @@ class _ProcedureScreenState extends State<ProcedureScreen> {
     setState(() {
       _showLoader = true;
     });
+
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _showLoader = false;
+      });
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Verifica que estes conectado a internet.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+      return;
+    }
     
     Response response = await ApiHelper.delete(
       '/api/Procedures/', 
       widget.procedure.id.toString(), 
-      widget.token.token
+      widget.token
     );
 
     setState(() {

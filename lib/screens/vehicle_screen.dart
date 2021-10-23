@@ -6,7 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-//import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 import 'package:vehicles_app/components/loader_component.dart';
 import 'package:vehicles_app/helpers/api_helper.dart';
@@ -34,7 +34,7 @@ class _VehicleScreenState extends State<VehicleScreen> {
   bool _photoChanged = false;
   late XFile _image;
   int _current = 0;
-  //CarouselController _carouselController = CarouselController();
+  CarouselController _carouselController = CarouselController();
 
   int _vehicleTypeId = 0;
   String _vehicleTypeIdError = '';
@@ -824,71 +824,71 @@ class _VehicleScreenState extends State<VehicleScreen> {
 
   Widget _showPhotosCarousel() {
     return Container(
-      // margin: EdgeInsets.symmetric(vertical: 10),
-      // child: Column(
-      //   children: [
-      //     CarouselSlider(
-      //       options: CarouselOptions(
-      //         height: 200,
-      //         autoPlay: true,
-      //         autoPlayInterval: Duration(seconds: 3),
-      //         enlargeCenterPage: true,
-      //         onPageChanged: (index, reason) {
-      //           setState(() {
-      //             _current = index;
-      //           });
-      //         }
-      //       ),
-      //       carouselController: _carouselController,
-      //       items: widget.vehicle.vehiclePhotos.map((i) {
-      //         return Builder(
-      //           builder: (BuildContext context) {
-      //             return Container(
-      //               width: MediaQuery.of(context).size.width,
-      //               margin: EdgeInsets.symmetric(horizontal: 5),
-      //               child:  ClipRRect(
-      //                  borderRadius: BorderRadius.circular(20),
-      //                 child: CachedNetworkImage(
-      //                   imageUrl: i.imageFullPath,
-      //                   errorWidget: (context, url, error) => Icon(Icons.error),
-      //                   fit: BoxFit.cover,
-      //                   height: 300,
-      //                   width: 300,
-      //                   placeholder: (context, url) => Image(
-      //                     image: AssetImage('assets/vehicles_logo.png'),
-      //                     fit: BoxFit.cover,
-      //                     height: 300,
-      //                     width: 300,
-      //                   ),
-      //                 ),
-      //               )
-      //             );
-      //           },
-      //         );
-      //       }).toList(),
-      //     ),
-      //     Row(
-      //       mainAxisAlignment: MainAxisAlignment.center,
-      //       children: widget.vehicle.vehiclePhotos.asMap().entries.map((entry) {
-      //         return GestureDetector(
-      //           onTap: () => _carouselController.animateToPage(entry.key),
-      //           child: Container(
-      //             width: 12.0,
-      //             height: 12.0,
-      //             margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      //             decoration: BoxDecoration(
-      //                 shape: BoxShape.circle,
-      //                 color: (Theme.of(context).brightness == Brightness.dark
-      //                         ? Colors.white
-      //                         : Colors.black)
-      //                     .withOpacity(_current == entry.key ? 0.9 : 0.4)),
-      //           ),
-      //         );
-      //       }).toList(),
-      //     ),
-      //     _showImageButtons()        
-      //   ],
-      // ),
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        children: [
+          CarouselSlider(
+            options: CarouselOptions(
+              height: 200,
+              autoPlay: true,
+              autoPlayInterval: Duration(seconds: 3),
+              enlargeCenterPage: true,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _current = index;
+                });
+              }
+            ),
+            carouselController: _carouselController,
+            items: widget.vehicle.vehiclePhotos.map((i) {
+              return Builder(
+                builder: (BuildContext context) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: EdgeInsets.symmetric(horizontal: 5),
+                    child:  ClipRRect(
+                       borderRadius: BorderRadius.circular(20),
+                      child: CachedNetworkImage(
+                        imageUrl: i.imageFullPath,
+                        errorWidget: (context, url, error) => Icon(Icons.error),
+                        fit: BoxFit.cover,
+                        height: 300,
+                        width: 300,
+                        placeholder: (context, url) => Image(
+                          image: AssetImage('assets/vehicles_logo.png'),
+                          fit: BoxFit.cover,
+                          height: 300,
+                          width: 300,
+                        ),
+                      ),
+                    )
+                  );
+                },
+              );
+            }).toList(),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: widget.vehicle.vehiclePhotos.asMap().entries.map((entry) {
+              return GestureDetector(
+                onTap: () => _carouselController.animateToPage(entry.key),
+                child: Container(
+                  width: 12.0,
+                  height: 12.0,
+                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black)
+                          .withOpacity(_current == entry.key ? 0.9 : 0.4)),
+                ),
+              );
+            }).toList(),
+          ),
+          _showImageButtons()        
+        ],
+      ),
     );
   }
 

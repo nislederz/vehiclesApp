@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:email_validator/email_validator.dart';
@@ -462,14 +463,19 @@ class _UserScreenState extends State<UserScreen> {
                   height: 160,
                   fit: BoxFit.cover,
                 )
-                :FadeInImage(
-                  placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
-                  //image: NetworkImage(widget.user.imageFullPath), //TODOS
+                :CachedNetworkImage(
+                imageUrl: widget.token.user.imageFullPath,
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                fit: BoxFit.cover,
+                height: 300,
+                width: 300,
+                placeholder: (context, url) => Image(
                   image: AssetImage('assets/alto_ahi_loca.jpg'),
-                  width: 160,
-                  height: 160,
                   fit: BoxFit.cover,
+                  height: 300,
+                  width: 300,
                 ),
+              )
             ),
       ),
       Positioned(

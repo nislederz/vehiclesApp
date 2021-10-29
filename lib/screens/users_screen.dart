@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:vehicles_app/components/loader_component.dart';
@@ -152,14 +153,19 @@ class _UsersScreenState extends State<UsersScreen> {
                     )
                     :ClipRRect(
                       borderRadius: BorderRadius.circular(40),
-                      child: FadeInImage(
-                        placeholder: AssetImage('assets/alto_ahi_loca.jpg'),
-                        //image: NetworkImage(e.imageFullPath), //TODOS
-                        image: AssetImage('assets/alto_ahi_loca.jpg'),
-                        width: 80,
-                        height: 80,
+                      child: CachedNetworkImage(
+                        imageUrl: widget.token.user.imageFullPath,
+                        errorWidget: (context, url, error) => Icon(Icons.error),
                         fit: BoxFit.cover,
-                      ),
+                        height: 300,
+                        width: 300,
+                        placeholder: (context, url) => Image(
+                          image: AssetImage('assets/alto_ahi_loca.jpg'),
+                          fit: BoxFit.cover,
+                          height: 300,
+                          width: 300,
+                        ),
+                      )
                     ),
                     Expanded(
                       child: Container(

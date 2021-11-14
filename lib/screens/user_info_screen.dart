@@ -2,9 +2,11 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:vehicles_app/components/loader_component.dart';
 import 'package:vehicles_app/helpers/api_helper.dart';
+import 'package:vehicles_app/helpers/regex_helper.dart';
 import 'package:vehicles_app/models/brand.dart';
 import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/models/token.dart';
@@ -14,12 +16,14 @@ import 'package:vehicles_app/models/vehicle_type.dart';
 import 'package:vehicles_app/screens/user_screen.dart';
 import 'package:vehicles_app/screens/vehicle_info_screen.dart';
 import 'package:vehicles_app/screens/vehicle_screen.dart';
+import 'package:whatsapp_unilink/whatsapp_unilink.dart';
 
 class UserInfoScreen extends StatefulWidget {
   final Token token;
   final User user;
+  final bool isAdmin;
 
-  UserInfoScreen({required this.token, required this.user});
+  UserInfoScreen({required this.token, required this.user, required this.isAdmin});
 
   @override
   _UserInfoScreenState createState() => _UserInfoScreenState();
@@ -201,7 +205,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                               )
                             ),
                             Text(
-                              _user.phoneNumber, 
+                              '+${_user.countryCode} ${_user.phoneNumber}', 
                               style: TextStyle(
                                 fontSize: 14,
                               ),
@@ -225,6 +229,8 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                             ),
                           ],
                         ),
+                        SizedBox(height: 5,),
+                        widget.isAdmin ? _showCallButtons() : Container()
                       ],
                     ),
                   ),
@@ -244,6 +250,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         builder: (context) => UserScreen(
           token: widget.token, 
           user: _user,
+          myProfile: false,
         )
       )
     );
@@ -303,7 +310,8 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         builder: (context) => VehicleInfoScreen(
           token: widget.token, 
           user: _user, 
-          vehicle: vehicle
+          vehicle: vehicle,
+          isAdmin: widget.isAdmin,
         ) 
       )
     );
@@ -444,5 +452,47 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         ),
       ),
     );
+  }
+
+  Widget _showCallButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              height: 40,
+              width: 40,
+              color: Colors.blue,
+              child: IconButton(
+                icon: Icon(Icons.call, color: Colors.white,),
+                onPressed: () => launch('tel://+${widget.user.countryCode}${RegexHelper.removeBlankSpaces(widget.user.phoneNumber)}'), 
+              ),
+            ),
+          ),       
+          SizedBox(width: 10,),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              height: 40,
+              width: 40,
+              color: Colors.green,
+              child: IconButton(
+                icon: Icon(Icons.insert_comment, color: Colors.white,),
+                onPressed: () => _sendMessage(), 
+              ),
+            ),
+          ),       
+          SizedBox(width: 10,),
+      ],
+    );
+  }
+
+  void _sendMessage() async {
+    final link = WhatsAppUnilink(
+      phoneNumber: '+${widget.user.countryCode}${RegexHelper.removeBlankSpaces(widget.user.phoneNumber)}',
+      text: 'Hola te escribo del taller.',
+    );
+    await launch('$link');  
   }
 }

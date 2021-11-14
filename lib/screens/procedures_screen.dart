@@ -1,19 +1,17 @@
-import 'dart:convert';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import 'package:vehicles_app/components/loader_component.dart';
 import 'package:vehicles_app/helpers/api_helper.dart';
-import 'package:vehicles_app/helpers/constans.dart';
 import 'package:vehicles_app/models/procedure.dart';
 import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/models/token.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:vehicles_app/screens/procedure_screen.dart';
 
 class ProceduresScreen extends StatefulWidget {
-  final Token token;  
+  final Token token;
 
   ProceduresScreen({required this.token});
 
@@ -24,11 +22,11 @@ class ProceduresScreen extends StatefulWidget {
 class _ProceduresScreenState extends State<ProceduresScreen> {
   List<Procedure> _procedures = [];
   bool _showLoader = false;
-  String _search = '';
   bool _isFiltered = false;
+  String _search = '';
 
   @override
-  void initState() {    
+  void initState() {
     super.initState();
     _getProcedures();
   }
@@ -38,20 +36,20 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Procedimientos'),
-         actions: <Widget>[
+        actions: <Widget>[
           _isFiltered
           ? IconButton(
-            onPressed: _removeFilter,
-             icon: Icon(Icons.filter_none)
-          )
+              onPressed: _removeFilter, 
+              icon: Icon(Icons.filter_none)
+            )
           : IconButton(
-            onPressed: _showFilter,
-             icon: Icon(Icons.filter_alt)
-          )
-        ],     
+              onPressed: _showFilter, 
+              icon: Icon(Icons.filter_alt)
+            )
+        ],
       ),
       body: Center(
-        child: _showLoader? LoaderComponent(text: 'Por favor espere...',) :_getContent(),
+        child: _showLoader ? LoaderComponent(text: 'Por favor espere...') : _getContent(),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
@@ -60,9 +58,9 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
     );
   }
 
-  Future<Null> _getProcedures() async{
+  Future<Null> _getProcedures() async {
     setState(() {
-      _showLoader= true;  
+      _showLoader = true;
     });
 
     var connectivityResult = await Connectivity().checkConnectivity();
@@ -84,29 +82,28 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
     Response response = await ApiHelper.getProcedures(widget.token);
 
     setState(() {
-      _showLoader= false;
+      _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
         context: context,
-        title: 'Error',
+        title: 'Error', 
         message: response.message,
         actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
+            AlertDialogAction(key: null, label: 'Aceptar'),
         ]
-      );
+      );    
       return;
-    }   
+    }
 
     setState(() {
       _procedures = response.result;
     });
-
   }
 
   Widget _getContent() {
-    return _procedures.length == 0
+    return _procedures.length == 0 
       ? _noContent()
       : _getListView();
   }
@@ -117,14 +114,14 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
         margin: EdgeInsets.all(20),
         child: Text(
           _isFiltered
-          ? 'No hay procedimientos cone se criterio de busqueda.'
+          ? 'No hay procedimientos con ese criterio de búsqueda.'
           : 'No hay procedimientos registrados.',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.bold
           ),
         ),
-      )
+      ),
     );
   }
 
@@ -132,33 +129,32 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
     return RefreshIndicator(
       onRefresh: _getProcedures,
       child: ListView(
-        children: _procedures.map((e){
+        children: _procedures.map((e) {
           return Card(
             child: InkWell(
-              onTap: ()=> _goEdit(e),
+              onTap: () => _goEdit(e),
               child: Container(
                 margin: EdgeInsets.all(10),
                 padding: EdgeInsets.all(5),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          e.description,
+                          e.description, 
                           style: TextStyle(
                             fontSize: 20,
                           ),
                         ),
-                        Icon(Icons.arrow_forward_ios)
+                        Icon(Icons.arrow_forward_ios),
                       ],
                     ),
                     SizedBox(height: 5,),
                     Row(
                       children: [
                         Text(
-                          '${NumberFormat.currency(symbol: '\$').format(e.price)}',
+                          '${NumberFormat.currency(symbol: '\$').format(e.price)}', 
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -177,60 +173,59 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
 
   void _showFilter() {
     showDialog(
-      context: context,
-      builder: (context){
+      context: context, 
+      builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          title: Text('Filtrar procedimientos.'),
+          title: Text('Filtrar Procedimientos'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text('Escriba las primeras letras del procedimiento.'),    
+              Text('Escriba las primeras letras del procedimiento'),
               SizedBox(height: 10,),
               TextField(
-                autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Criterio de busqueda...',
+                  hintText: 'Criterio de búsqueda...',
                   labelText: 'Buscar',
-                  suffixIcon: Icon(Icons.search),
+                  suffixIcon: Icon(Icons.search)
                 ),
-                onChanged: (value){
-                  _search = value;                                      
+                onChanged: (value) {
+                  _search = value;
                 },
               )
             ],
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(), 
               child: Text('Cancelar')
             ),
             TextButton(
-              onPressed: () => _filter(),
+              onPressed: () => _filter(), 
               child: Text('Filtrar')
-            )
+            ),
           ],
         );
-      }
-    );
+      });
   }
 
   void _removeFilter() {
     setState(() {
       _isFiltered = false;
-      _getProcedures();
     });
+    _getProcedures();
   }
 
   void _filter() {
-    if(_search.isEmpty){
+    if (_search.isEmpty) {
       return;
     }
+
     List<Procedure> filteredList = [];
-    for(var procedure in _procedures){
-      if(procedure.description.toLowerCase().contains(_search)){
+    for (var procedure in _procedures) {
+      if (procedure.description.toLowerCase().contains(_search.toLowerCase())) {
         filteredList.add(procedure);
       }
     }
@@ -246,15 +241,14 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
   void _goAdd() async {
     String? result = await Navigator.push(
       context, 
-        MaterialPageRoute(
-          builder: (context) => ProcedureScreen(
-            token: widget.token, 
-            procedure: Procedure(id: 0, description: '', price: 0) 
-          )
+      MaterialPageRoute(
+        builder: (context) => ProcedureScreen(
+          token: widget.token, 
+          procedure: Procedure(description: '', id: 0, price: 0),
         )
+      )
     );
-
-    if(result == 'yes'){
+    if (result == 'yes') {
       _getProcedures();
     }
   }
@@ -269,10 +263,8 @@ class _ProceduresScreenState extends State<ProceduresScreen> {
         )
       )
     );
-    
-    if(result == 'yes'){
+    if (result == 'yes') {
       _getProcedures();
     }
   }
-
 }

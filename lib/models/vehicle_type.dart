@@ -1,6 +1,6 @@
 class VehicleType {
   int id = 0;
-  String description = "";
+  String description = '';
 
   VehicleType({required this.id, required this.description});
 

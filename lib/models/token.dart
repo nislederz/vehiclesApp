@@ -13,10 +13,12 @@ class Token {
     imageId: '', 
     imageFullPath: '', 
     userType: 0, 
+    loginType: 0, 
     fullName: '', 
     id: '', 
     userName: '', 
     email: '', 
+    countryCode: '57',
     phoneNumber: '', 
     vehicles: [], 
     vehiclesCount: 0

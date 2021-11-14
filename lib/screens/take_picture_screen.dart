@@ -4,7 +4,7 @@ import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/screens/display_picture_screen.dart';
 
 class TakePictureScreen extends StatefulWidget {
-  final  CameraDescription camera;
+  final CameraDescription camera;
 
   TakePictureScreen({required this.camera});
 
@@ -17,17 +17,17 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   late Future<void> _initializeControllerFuture;
 
   @override
-  void initState() {    
+  void initState() {
     super.initState();
     _controller = CameraController(
       widget.camera,
-      ResolutionPreset.low
+      ResolutionPreset.low,
     );
     _initializeControllerFuture = _controller.initialize();
   }
 
   @override
-  void dispose() {  
+  void dispose() {
     _controller.dispose();
     super.dispose();
   }
@@ -38,33 +38,31 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
       appBar: AppBar(
         title: Text('Tomar Foto'),
       ),
-      body: FutureBuilder<void>(
+      body: FutureBuilder<void> (
         future: _initializeControllerFuture,
-        builder: (context, snapshot){
-          if(snapshot.connectionState == ConnectionState.done){
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
             return CameraPreview(_controller);
-          }
-          else{
-            return Center( child: CircularProgressIndicator(),);
+          } else {
+            return Center(child: CircularProgressIndicator(),);
           }
         },
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.camera_alt),
-        onPressed: () async {
+        onPressed: () async {  
           try {
             await _initializeControllerFuture;
             final image = await _controller.takePicture();
-            Response? response =await Navigator.of(context).push(
+            Response? response = await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => DisplayPictureScreen(image: image)
+                builder: (context) => DisplayPictureScreen(image: image,)
               )
             );
-            if(response != null){
+            if (response != null) {
               Navigator.pop(context, response);
             }
-          } 
-          catch (e) {
+          } catch (e) {
             print(e);
           }
         },

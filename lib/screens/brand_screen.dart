@@ -1,18 +1,17 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:adaptive_dialog/adaptive_dialog.dart';
-import 'package:flutter/cupertino.dart';
+
 import 'package:vehicles_app/components/loader_component.dart';
 import 'package:vehicles_app/helpers/api_helper.dart';
 import 'package:vehicles_app/models/brand.dart';
-import 'package:vehicles_app/models/procedure.dart';
 import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/models/token.dart';
 
 class BrandScreen extends StatefulWidget {
   final Token token;
   final Brand brand;
-  
+
   BrandScreen({required this.token, required this.brand});
 
   @override
@@ -20,34 +19,39 @@ class BrandScreen extends StatefulWidget {
 }
 
 class _BrandScreenState extends State<BrandScreen> {
-  bool _showLoader = false;  
+  bool _showLoader = false;
+
   String _description = '';
   String _descriptionError = '';
   bool _descriptionShowError = false;
-  TextEditingController _descriptionController = TextEditingController();  
-  
+  TextEditingController _descriptionController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _description = widget.brand.description;
-    _descriptionController.text = _description;    
+    _descriptionController.text = _description;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( 
-        title: Text( widget.brand.id == 0 ? 'Nueva Marca':widget.brand.description,),          
+      appBar: AppBar(
+        title: Text(
+          widget.brand.id == 0 
+            ? 'Nuevo marca' 
+            : widget.brand.description
+        ),
       ),
       body: Stack(
-        children: [
+        children: <Widget>[
           Column(
             children: <Widget>[
-                _showDescription(),           
-                _showButtons(),
+              _showDescription(),
+              _showButtons(),
             ],
           ),
-          _showLoader? LoaderComponent(text: 'Por favor espere...'): Container(),
+          _showLoader ? LoaderComponent(text: 'Por favor espere...',) : Container(),
         ],
       ),
     );
@@ -59,15 +63,15 @@ class _BrandScreenState extends State<BrandScreen> {
       child: TextField(
         controller: _descriptionController,
         decoration: InputDecoration(
-          hintText: 'Ingresa una descripcion.',
-          labelText: 'Descripcion',
-          errorText: _descriptionShowError ? _descriptionError: null,
+          hintText: 'Ingresa una descripción...',
+          labelText: 'Descripción',
+          errorText: _descriptionShowError ? _descriptionError : null,
           suffixIcon: Icon(Icons.description),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10)
           ),
         ),
-        onChanged: (value){
+        onChanged: (value) {
           _description = value;
         },
       ),
@@ -82,10 +86,10 @@ class _BrandScreenState extends State<BrandScreen> {
         children: <Widget>[
           Expanded(
             child: ElevatedButton(
-              child: Text('Guardar.'),
+              child: Text('Guardar'),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states){
+                  (Set<MaterialState> states) {
                     return Color(0xFF120E43);
                   }
                 ),
@@ -94,57 +98,56 @@ class _BrandScreenState extends State<BrandScreen> {
             ),
           ),
           widget.brand.id == 0 
-            ?Container()
-            :SizedBox(width:20,),
-          widget.brand.id == 0
-            ?Container()
-            :Expanded(
-              child: ElevatedButton(
-                child: Text('Borrar'),
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                    (Set<MaterialState> states){
-                      return Color(0xFFB4161B);
-                    }
+            ? Container() 
+            : SizedBox(width: 20,),
+          widget.brand.id == 0 
+            ? Container() 
+            : Expanded(
+                child: ElevatedButton(
+                  child: Text('Borrar'),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                      (Set<MaterialState> states) {
+                        return Color(0xFFB4161B);
+                      }
+                    ),
                   ),
-                ),
-                onPressed: () => _confirmDelete(), 
+                  onPressed: () => _confirmDelete(), 
               ),
-            ),
+          ),
         ],
       ),
     );
   }
 
   void _save() {
-    if(!_validateFields()){
+    if (!_validateFields()) {
       return;
     }
 
-    widget.brand.id == 0? _addRecord() : _saveRecord();
+    widget.brand.id == 0 ? _addRecord() : _saveRecord();
   }
 
   bool _validateFields() {
-     bool isValid = true;
+    bool isValid = true;
 
-    if(_description.isEmpty){
+    if (_description.isEmpty) {
       isValid = false;
       _descriptionShowError = true;
-      _descriptionError = 'Debes ingresar una descripcion.';
-    }   
-    else{
+      _descriptionError = 'Debes ingresar una descripción.';
+    } else {
       _descriptionShowError = false;
     }
 
-    setState(() {});
-    return isValid;    
+    setState(() { });
+    return isValid;
   }
 
-  _addRecord() async{
+  void _addRecord() async {
     setState(() {
       _showLoader = true;
     });
-    
+
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       setState(() {
@@ -160,9 +163,8 @@ class _BrandScreenState extends State<BrandScreen> {
       );    
       return;
     }
-    
-    Map<String, dynamic> request ={
-      'id': widget.brand.id,
+
+    Map<String, dynamic> request = {
       'description': _description,
     };
 
@@ -176,22 +178,22 @@ class _BrandScreenState extends State<BrandScreen> {
       _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
         context: context,
-        title: 'Error',
+        title: 'Error', 
         message: response.message,
         actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
+            AlertDialogAction(key: null, label: 'Aceptar'),
         ]
-      );
+      );    
       return;
-    }   
+    }
 
-    Navigator.pop(context, 'yes') ;
+    Navigator.pop(context, 'yes');
   }
 
-  _saveRecord() async {
+  void _saveRecord() async {
     setState(() {
       _showLoader = true;
     });
@@ -211,8 +213,8 @@ class _BrandScreenState extends State<BrandScreen> {
       );    
       return;
     }
-    
-    Map<String, dynamic> request ={
+
+    Map<String, dynamic> request = {
       'id': widget.brand.id,
       'description': _description,
     };
@@ -228,39 +230,38 @@ class _BrandScreenState extends State<BrandScreen> {
       _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
         context: context,
-        title: 'Error',
+        title: 'Error', 
         message: response.message,
         actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
+            AlertDialogAction(key: null, label: 'Aceptar'),
         ]
-      );
+      );    
       return;
-    }   
+    }
 
-    Navigator.pop(context, 'yes') ;
+    Navigator.pop(context, 'yes');
   }
 
   void _confirmDelete() async {
-    var response = await showAlertDialog(
+    var response =  await showAlertDialog(
       context: context,
-      title: 'Comfirmacion',
-      message: 'Estas seguro de borrar el registro?',
+      title: 'Confirmación', 
+      message: '¿Estas seguro de querer borrar el registro?',
       actions: <AlertDialogAction>[
-        AlertDialogAction(key: 'no', label: 'No'),
-        AlertDialogAction(key: 'yes', label: 'Si'),
+          AlertDialogAction(key: 'no', label: 'No'),
+          AlertDialogAction(key: 'yes', label: 'Sí'),
       ]
-    );
+    );    
 
-    if(response == 'yes'){
+    if (response == 'yes') {
       _deleteRecord();
     }
-
   }
 
-  void _deleteRecord() async{
+  void _deleteRecord() async {
     setState(() {
       _showLoader = true;
     });
@@ -280,7 +281,7 @@ class _BrandScreenState extends State<BrandScreen> {
       );    
       return;
     }
-    
+
     Response response = await ApiHelper.delete(
       '/api/Brands/', 
       widget.brand.id.toString(), 
@@ -291,19 +292,18 @@ class _BrandScreenState extends State<BrandScreen> {
       _showLoader = false;
     });
 
-    if(!response.isSuccess){
+    if (!response.isSuccess) {
       await showAlertDialog(
         context: context,
-        title: 'Error',
+        title: 'Error', 
         message: response.message,
         actions: <AlertDialogAction>[
-          AlertDialogAction(key: null, label: 'Aceptar'),
+            AlertDialogAction(key: null, label: 'Aceptar'),
         ]
-      );
+      );    
       return;
-    }   
+    }
 
-    Navigator.pop(context, 'yes') ;
+    Navigator.pop(context, 'yes');
   }
-
 }

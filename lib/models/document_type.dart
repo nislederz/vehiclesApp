@@ -1,6 +1,6 @@
 class DocumentType {
   int id = 0;
-  String description = "";
+  String description = '';
 
   DocumentType({required this.id, required this.description});
 

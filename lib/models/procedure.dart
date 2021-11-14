@@ -1,6 +1,6 @@
 class Procedure {
   int id = 0;
-  String description = ''; 
+  String description = '';
   double price = 0;
 
   Procedure({required this.id, required this.description, required this.price});

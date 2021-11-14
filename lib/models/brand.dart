@@ -1,6 +1,6 @@
 class Brand {
   int id = 0;
-  String description = "";
+  String description = '';
 
   Brand({required this.id, required this.description});
 

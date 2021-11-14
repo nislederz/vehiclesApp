@@ -1,29 +1,30 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:adaptive_dialog/adaptive_dialog.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+
 import 'package:vehicles_app/components/loader_component.dart';
 import 'package:vehicles_app/helpers/api_helper.dart';
-import 'package:vehicles_app/models/brand.dart';
 import 'package:vehicles_app/models/document_type.dart';
-import 'package:vehicles_app/models/procedure.dart';
 import 'package:vehicles_app/models/response.dart';
 import 'package:vehicles_app/models/token.dart';
 import 'package:vehicles_app/models/user.dart';
+import 'package:vehicles_app/screens/change_password_screen.dart';
 import 'package:vehicles_app/screens/take_picture_screen.dart';
 
 class UserScreen extends StatefulWidget {
   final Token token;
   final User user;
+  final bool myProfile;
 
-  const UserScreen({required this.token, required this.user});
+  UserScreen({required this.token, required this.user, required this.myProfile});
 
   @override
   _UserScreenState createState() => _UserScreenState();
@@ -31,9 +32,10 @@ class UserScreen extends StatefulWidget {
 
 class _UserScreenState extends State<UserScreen> {
   bool _showLoader = false;
-
-  bool _photoChange = false;
+  bool _photoChanged = false;
   late XFile _image;
+  String _countryName = 'Colombia (CO)';
+  String _countryCode = '57';
 
   String _firstName = '';
   String _firstNameError = '';
@@ -55,10 +57,10 @@ class _UserScreenState extends State<UserScreen> {
   bool _documentShowError = false;
   TextEditingController _documentController = TextEditingController();
 
-  String _adress = '';
-  String _adressError = '';
-  bool _adressShowError = false;
-  TextEditingController _adressController = TextEditingController();
+  String _address = '';
+  String _addressError = '';
+  bool _addressShowError = false;
+  TextEditingController _addressController = TextEditingController();
 
   String _email = '';
   String _emailError = '';
@@ -74,26 +76,7 @@ class _UserScreenState extends State<UserScreen> {
   void initState() {
     super.initState();
     _getDocumentTypes();
-
-    _firstName = widget.user.firstName;
-    _firstNameController.text = _firstName;
-
-    _lastName = widget.user.lastName;
-    _lastNameController.text = _lastName;
-
-    _documentTypeId = widget.user.documentType.id;
-
-    _document = widget.user.document;
-    _documentController.text = _document;
-
-    _adress = widget.user.address;
-    _adressController.text = _adress;
-
-    _email = widget.user.email;
-    _emailController.text = _email;
-
-    _phoneNumber = widget.user.phoneNumber;
-    _phoneNumberController.text = _phoneNumber;
+    _loadFieldValues();
   }
 
   @override
@@ -101,7 +84,9 @@ class _UserScreenState extends State<UserScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.user.id.isEmpty ? 'Nuevo Usuario' : widget.user.fullName,
+          widget.user.id.isEmpty
+            ? 'Nuevo usuario' 
+            : widget.user.fullName
         ),
       ),
       body: Stack(
@@ -116,14 +101,13 @@ class _UserScreenState extends State<UserScreen> {
                 _showDocument(),
                 _showEmail(),
                 _showAddress(),
+                _showCountry(),
                 _showPhoneNumber(),
                 _showButtons(),
               ],
             ),
           ),
-          _showLoader
-              ? LoaderComponent(text: 'Por favor espere...')
-              : Container(),
+          _showLoader ? LoaderComponent(text: 'Por favor espere...',) : Container(),
         ],
       ),
     );
@@ -135,11 +119,13 @@ class _UserScreenState extends State<UserScreen> {
       child: TextField(
         controller: _firstNameController,
         decoration: InputDecoration(
-          hintText: 'Ingrese nombres...',
+          hintText: 'Ingresa nombres...',
           labelText: 'Nombres',
           errorText: _firstNameShowError ? _firstNameError : null,
           suffixIcon: Icon(Icons.person),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10)
+          ),
         ),
         onChanged: (value) {
           _firstName = value;
@@ -156,35 +142,49 @@ class _UserScreenState extends State<UserScreen> {
         children: <Widget>[
           Expanded(
             child: ElevatedButton(
-              child: Text('Guardar.'),
+              child: Text('Guardar'),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                    (Set<MaterialState> states) {
-                  return Color(0xFF120E43);
-                }),
+                  (Set<MaterialState> states) {
+                    return Color(0xFF120E43);
+                  }
+                ),
               ),
-              onPressed: () => _save(),
+              onPressed: () => _save(), 
             ),
           ),
-          widget.user.id.isEmpty
-              ? Container()
-              : SizedBox(
-                  width: 20,
-                ),
-          widget.user.id.isEmpty
-              ? Container()
+          widget.user.id.isEmpty 
+            ? Container() 
+            : SizedBox(width: 20,),
+          widget.user.id.isEmpty 
+            ? Container() 
+            : widget.myProfile 
+              ? Expanded(
+                  child: ElevatedButton(
+                    child: Text('Cambiar Contraseña'),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                        (Set<MaterialState> states) {
+                          return Color(0xFFB4161B);
+                        }
+                      ),
+                    ),
+                    onPressed: () => _changePassword(), 
+                  )
+                ) 
               : Expanded(
                   child: ElevatedButton(
                     child: Text('Borrar'),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                        return Color(0xFFB4161B);
-                      }),
+                        (Set<MaterialState> states) {
+                          return Color(0xFFB4161B);
+                        }
+                      ),
                     ),
-                    onPressed: () => _confirmDelete(),
+                    onPressed: () => _confirmDelete(), 
                   ),
-                ),
+          ),
         ],
       ),
     );
@@ -204,7 +204,7 @@ class _UserScreenState extends State<UserScreen> {
     if (_firstName.isEmpty) {
       isValid = false;
       _firstNameShowError = true;
-      _firstNameError = 'Debes ingresar almenos un nombre.';
+      _firstNameError = 'Debes ingresar al menos un nombre.';
     } else {
       _firstNameShowError = false;
     }
@@ -212,7 +212,7 @@ class _UserScreenState extends State<UserScreen> {
     if (_lastName.isEmpty) {
       isValid = false;
       _lastNameShowError = true;
-      _lastNameError = 'Debes ingresar almenos un apellido.';
+      _lastNameError = 'Debes ingresar al menos un apellido.';
     } else {
       _lastNameShowError = false;
     }
@@ -220,7 +220,7 @@ class _UserScreenState extends State<UserScreen> {
     if (_documentTypeId == 0) {
       isValid = false;
       _documentTypeIdShowError = true;
-      _documentTypeIdError = 'Debes escoger el tipo de documento';
+      _documentTypeIdError = 'Debes seleccionar el tipo de documento.';
     } else {
       _documentTypeIdShowError = false;
     }
@@ -228,7 +228,7 @@ class _UserScreenState extends State<UserScreen> {
     if (_document.isEmpty) {
       isValid = false;
       _documentShowError = true;
-      _documentError = 'Debes ingresar el numero del documento';
+      _documentError = 'Debes ingresar el número de documento.';
     } else {
       _documentShowError = false;
     }
@@ -240,32 +240,32 @@ class _UserScreenState extends State<UserScreen> {
     } else if (!EmailValidator.validate(_email)) {
       isValid = false;
       _emailShowError = true;
-      _emailError = 'Debes ingresar un email valido.';
+      _emailError = 'Debes ingresar un email válido.';
     } else {
       _emailShowError = false;
     }
 
-    if (_adress.isEmpty) {
+    if (_address.isEmpty) {
       isValid = false;
-      _adressShowError = true;
-      _adressError = 'Debes ingresar una direccion';
+      _addressShowError = true;
+      _addressError = 'Debes ingresar una dirección.';
     } else {
-      _adressShowError = false;
+      _addressShowError = false;
     }
 
     if (_phoneNumber.isEmpty) {
       isValid = false;
       _phoneNumberShowError = true;
-      _phoneNumberError = 'Debes ingresar el numero del documento';
+      _phoneNumberError = 'Debes ingresar un teléfono.';
     } else {
       _phoneNumberShowError = false;
     }
 
-    setState(() {});
+    setState(() { });
     return isValid;
   }
 
-  _addRecord() async {
+  void _addRecord() async {
     setState(() {
       _showLoader = true;
     });
@@ -287,25 +287,29 @@ class _UserScreenState extends State<UserScreen> {
     }
 
     String base64image = '';
-    if(_photoChange){
+    if (_photoChanged) {
       List<int> imageBytes = await _image.readAsBytes();
-      base64image =base64Encode(imageBytes);
+      base64image = base64Encode(imageBytes);
     }
 
     Map<String, dynamic> request = {
       'firstName': _firstName,
       'lastName': _lastName,
+      'documentTypeId': _documentTypeId,
       'document': _document,
       'email': _email,
       'userName': _email,
-      'adress': _adress,
+      'address': _address,
+      'countryCode': _countryCode,
       'phoneNumber': _phoneNumber,
-      'documentTypeId': _documentTypeId,
-      'image': base64image
+      'image': base64image,
     };
 
-    Response response =
-        await ApiHelper.post('/api/Users/', request, widget.token);
+    Response response = await ApiHelper.post(
+      '/api/Users/', 
+      request, 
+      widget.token
+    );
 
     setState(() {
       _showLoader = false;
@@ -313,12 +317,13 @@ class _UserScreenState extends State<UserScreen> {
 
     if (!response.isSuccess) {
       await showAlertDialog(
-          context: context,
-          title: 'Error',
-          message: response.message,
-          actions: <AlertDialogAction>[
+        context: context,
+        title: 'Error', 
+        message: response.message,
+        actions: <AlertDialogAction>[
             AlertDialogAction(key: null, label: 'Aceptar'),
-          ]);
+        ]
+      );    
       return;
     }
 
@@ -347,26 +352,31 @@ class _UserScreenState extends State<UserScreen> {
     }
 
     String base64image = '';
-    if(_photoChange){
+    if (_photoChanged) {
       List<int> imageBytes = await _image.readAsBytes();
-      base64image =base64Encode(imageBytes);
+      base64image = base64Encode(imageBytes);
     }
 
     Map<String, dynamic> request = {
       'id': widget.user.id,
       'firstName': _firstName,
       'lastName': _lastName,
+      'documentTypeId': _documentTypeId,
       'document': _document,
       'email': _email,
       'userName': _email,
-      'adress': _adress,
+      'address': _address,
+      'countryCode': _countryCode,
       'phoneNumber': _phoneNumber,
-      'documentTypeId': _documentTypeId,
       'image': base64image,
     };
 
     Response response = await ApiHelper.put(
-        '/api/Users/', widget.user.id, request, widget.token);
+      '/api/Users/', 
+      widget.user.id, 
+      request, 
+      widget.token
+    );
 
     setState(() {
       _showLoader = false;
@@ -374,12 +384,13 @@ class _UserScreenState extends State<UserScreen> {
 
     if (!response.isSuccess) {
       await showAlertDialog(
-          context: context,
-          title: 'Error',
-          message: response.message,
-          actions: <AlertDialogAction>[
+        context: context,
+        title: 'Error', 
+        message: response.message,
+        actions: <AlertDialogAction>[
             AlertDialogAction(key: null, label: 'Aceptar'),
-          ]);
+        ]
+      );    
       return;
     }
 
@@ -387,14 +398,15 @@ class _UserScreenState extends State<UserScreen> {
   }
 
   void _confirmDelete() async {
-    var response = await showAlertDialog(
-        context: context,
-        title: 'Comfirmacion',
-        message: 'Estas seguro de borrar el registro?',
-        actions: <AlertDialogAction>[
+    var response =  await showAlertDialog(
+      context: context,
+      title: 'Confirmación', 
+      message: '¿Estas seguro de querer borrar el registro?',
+      actions: <AlertDialogAction>[
           AlertDialogAction(key: 'no', label: 'No'),
-          AlertDialogAction(key: 'yes', label: 'Si'),
-        ]);
+          AlertDialogAction(key: 'yes', label: 'Sí'),
+      ]
+    );    
 
     if (response == 'yes') {
       _deleteRecord();
@@ -423,7 +435,10 @@ class _UserScreenState extends State<UserScreen> {
     }
 
     Response response = await ApiHelper.delete(
-        '/api/Users/', widget.user.id, widget.token);
+      '/api/Users/', 
+      widget.user.id, 
+      widget.token
+    );
 
     setState(() {
       _showLoader = false;
@@ -431,12 +446,13 @@ class _UserScreenState extends State<UserScreen> {
 
     if (!response.isSuccess) {
       await showAlertDialog(
-          context: context,
-          title: 'Error',
-          message: response.message,
-          actions: <AlertDialogAction>[
+        context: context,
+        title: 'Error', 
+        message: response.message,
+        actions: <AlertDialogAction>[
             AlertDialogAction(key: null, label: 'Aceptar'),
-          ]);
+        ]
+      );    
       return;
     }
 
@@ -446,62 +462,64 @@ class _UserScreenState extends State<UserScreen> {
   Widget _showPhoto() {
     return Stack(
       children: <Widget>[
-      Container(
-        margin: EdgeInsets.only(top: 15,),
-        child: widget.user.id.isEmpty && !_photoChange
+        Container(
+          margin: EdgeInsets.only(top: 10),
+          child: widget.user.id.isEmpty && !_photoChanged
             ? Image(
-                image: AssetImage('assets/alto_ahi_loca.jpg'),
-                width: 160,
+                image: AssetImage('assets/noimage.png'),
                 height: 160,
-              )
+                width: 160,
+                fit: BoxFit.cover,
+              ) 
             : ClipRRect(
                 borderRadius: BorderRadius.circular(80),
-                child: _photoChange 
-                ?Image.file(
-                  File(_image.path),  
-                  width: 160,
-                  height: 160,
-                  fit: BoxFit.cover,
-                )
-                :CachedNetworkImage(
-                imageUrl: widget.token.user.imageFullPath,
-                errorWidget: (context, url, error) => Icon(Icons.error),
-                fit: BoxFit.cover,
-                height: 300,
-                width: 300,
-                placeholder: (context, url) => Image(
-                  image: AssetImage('assets/alto_ahi_loca.jpg'),
-                  fit: BoxFit.cover,
-                  height: 300,
-                  width: 300,
-                ),
-              )
-            ),
-      ),
-      Positioned(
-        bottom: 0,
-        left: 100,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
-            color: Colors.green[50],
-            height: 60,
-            width: 60,
-            child: Icon(
-              Icons.photo_camera,
-              size: 40,
-              color: Colors.blue,
-            ),
-          ),
-        )
-      ),
-      Positioned(
-        bottom: 0,
-        left: 00,
-        child: InkWell(
-          onTap: ()=> _takePicture(),
+                child: _photoChanged 
+                ? Image.file(
+                    File(_image.path),
+                    height: 160,
+                    width: 160,
+                    fit: BoxFit.cover,
+                  ) 
+                : CachedNetworkImage(
+                    imageUrl: widget.user.imageFullPath,
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    fit: BoxFit.cover,
+                    height: 160,
+                    width: 160,
+                    placeholder: (context, url) => Image(
+                      image: AssetImage('assets/vehicles_logo.png'),
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: 160,
+                    ),
+                  ),
+              ),        
+        ),
+        Positioned(
+          bottom: 0,
+          left: 100,
           child: InkWell(
-            onTap: ()=> _selectPicture(),
+            onTap: () => _takePicture(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: Container(
+                color: Colors.green[50],
+                height: 60,
+                width: 60,
+                child: Icon(
+                  Icons.photo_camera,
+                  size: 40,
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+          )
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          child: InkWell(
+            onTap: () => _selectPicture(),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(30),
               child: Container(
@@ -515,10 +533,10 @@ class _UserScreenState extends State<UserScreen> {
                 ),
               ),
             ),
-          ),
-        )
-      )
-    ]);
+          )
+        ),
+      ] 
+    );
   }
 
   Widget _showLastName() {
@@ -527,11 +545,13 @@ class _UserScreenState extends State<UserScreen> {
       child: TextField(
         controller: _lastNameController,
         decoration: InputDecoration(
-          hintText: 'Ingrese apellidos...',
+          hintText: 'Ingresa apellidos...',
           labelText: 'Apellidos',
           errorText: _lastNameShowError ? _lastNameError : null,
           suffixIcon: Icon(Icons.person),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10)
+          ),
         ),
         onChanged: (value) {
           _lastName = value;
@@ -543,22 +563,25 @@ class _UserScreenState extends State<UserScreen> {
   Widget _showDocumentType() {
     return Container(
       padding: EdgeInsets.all(10),
-      child: _documentTypes.length == 0
-          ? Text('Cargando tipos de documento')
-          : DropdownButtonFormField(
-              items: _getComboDocumentTypes(),
-              value: _documentTypeId,
-              onChanged: (option) {
+      child: _documentTypes.length == 0 
+        ? Text('Cargando tipos de documentos...')
+        : DropdownButtonFormField(
+            items: _getComboDocumentTypes(),
+            value: _documentTypeId,
+            onChanged: (option) {
+              setState(() {
                 _documentTypeId = option as int;
-              },
-              decoration: InputDecoration(
-                  hintText: 'Seleccione un tipo de documento...',
-                  labelText: 'Tipo documento',
-                  errorText:
-                      _documentTypeIdShowError ? _documentTypeIdError : null,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10))),
+              });
+            },
+            decoration: InputDecoration(
+              hintText: 'Seleccione un tipo de documento...',
+              labelText: 'Tipo documento',
+              errorText: _documentTypeIdShowError ? _documentTypeIdError : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10)
+              ),
             ),
+          )
     );
   }
 
@@ -572,7 +595,9 @@ class _UserScreenState extends State<UserScreen> {
           labelText: 'Documento',
           errorText: _documentShowError ? _documentError : null,
           suffixIcon: Icon(Icons.assignment_ind),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10)
+          ),
         ),
         onChanged: (value) {
           _document = value;
@@ -589,11 +614,13 @@ class _UserScreenState extends State<UserScreen> {
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
-          hintText: 'Ingresa el Email...',
+          hintText: 'Ingresa email...',
           labelText: 'Email',
           errorText: _emailShowError ? _emailError : null,
-          suffixIcon: Icon(Icons.mail),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          suffixIcon: Icon(Icons.email),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10)
+          ),
         ),
         onChanged: (value) {
           _email = value;
@@ -606,17 +633,19 @@ class _UserScreenState extends State<UserScreen> {
     return Container(
       padding: EdgeInsets.all(10),
       child: TextField(
+        controller: _addressController,
         keyboardType: TextInputType.streetAddress,
-        controller: _adressController,
         decoration: InputDecoration(
-          hintText: 'Ingresa tu direccion...',
-          labelText: 'Direccion',
-          errorText: _adressShowError ? _adressError : null,
+          hintText: 'Ingresa dirección...',
+          labelText: 'Dirección',
+          errorText: _addressShowError ? _addressError : null,
           suffixIcon: Icon(Icons.home),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10)
+          ),
         ),
         onChanged: (value) {
-          _adress = value;
+          _address = value;
         },
       ),
     );
@@ -626,14 +655,16 @@ class _UserScreenState extends State<UserScreen> {
     return Container(
       padding: EdgeInsets.all(10),
       child: TextField(
-        keyboardType: TextInputType.phone,
         controller: _phoneNumberController,
+        keyboardType: TextInputType.phone,
         decoration: InputDecoration(
-          hintText: 'Ingresa tu telefono...',
-          labelText: 'Telefono',
+          hintText: 'Ingresa teléfono...',
+          labelText: 'Teléfono',
           errorText: _phoneNumberShowError ? _phoneNumberError : null,
           suffixIcon: Icon(Icons.phone),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10)
+          ),
         ),
         onChanged: (value) {
           _phoneNumber = value;
@@ -671,12 +702,13 @@ class _UserScreenState extends State<UserScreen> {
 
     if (!response.isSuccess) {
       await showAlertDialog(
-          context: context,
-          title: 'Error',
-          message: response.message,
-          actions: <AlertDialogAction>[
+        context: context,
+        title: 'Error', 
+        message: response.message,
+        actions: <AlertDialogAction>[
             AlertDialogAction(key: null, label: 'Aceptar'),
-          ]);
+        ]
+      );    
       return;
     }
 
@@ -687,15 +719,16 @@ class _UserScreenState extends State<UserScreen> {
 
   List<DropdownMenuItem<int>> _getComboDocumentTypes() {
     List<DropdownMenuItem<int>> list = [];
+    
     list.add(DropdownMenuItem(
-      child: Text('Seleccione un tipo de documento.'),
+      child: Text('Seleccione un tipo de documento...'),
       value: 0,
     ));
 
-    _documentTypes.forEach((documentType) {
+    _documentTypes.forEach((documnentType) { 
       list.add(DropdownMenuItem(
-        child: Text(documentType.description),
-        value: documentType.id,
+        child: Text(documnentType.description),
+        value: documnentType.id,
       ));
     });
 
@@ -703,34 +736,158 @@ class _UserScreenState extends State<UserScreen> {
   }
 
   void _takePicture() async {
+    if (widget.user.loginType != 0) {
+      _validateUserSocial();
+      return;
+    }
+
     WidgetsFlutterBinding.ensureInitialized();
     final cameras = await availableCameras();
-    final firstCamera = cameras.first;
-    Response? response = await Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => TakePictureScreen(
-                  camera: firstCamera,
-            )
-        )
+    var camera = cameras.first;
+    var responseCamera = await showAlertDialog(
+        context: context,
+        title: 'Seleccionar cámara',
+        message: '¿Qué cámara desea utilizar?',
+        actions: <AlertDialogAction>[
+          AlertDialogAction(key: 'front', label: 'Delantera'),
+          AlertDialogAction(key: 'back', label: 'Trasera'),
+          AlertDialogAction(key: 'cancel', label: 'Cancelar'),
+        ]
     );
-
-    if(response != null){
+ 
+    if (responseCamera == 'cancel') {
+      return;
+    }
+ 
+    if (responseCamera == 'back') {
+      camera = cameras.first;
+    }
+ 
+    if (responseCamera == 'front') {
+      camera = cameras.last;
+    }
+ 
+    Response? response = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(camera: camera)
+      )
+    );
+    if (response != null) {
       setState(() {
-        _photoChange = true;
+        _photoChanged = true;
         _image = response.result;
       });
     }
   }
 
-  void _selectPicture() async{
+  void _selectPicture() async {
+    if (widget.user.loginType != 0) {
+      _validateUserSocial();
+      return;
+    }
+
     final ImagePicker _picker = ImagePicker();
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if(image != null){
+    if (image != null) {
       setState(() {
-        _photoChange = true;
-        _image = image;        
+        _photoChanged = true;
+        _image = image;
       });
     }
+  }
+
+  void _loadFieldValues() {
+    _firstName = widget.user.firstName;
+    _firstNameController.text = _firstName;
+    
+    _lastName = widget.user.lastName;
+    _lastNameController.text = _lastName;
+
+    _documentTypeId = widget.user.documentType.id;
+
+    _document = widget.user.document;
+    _documentController.text = _document;
+
+    _address = widget.user.address;
+    _addressController.text = _address;
+
+    _email = widget.user.email;
+    _emailController.text = _email;
+
+    _phoneNumber = widget.user.phoneNumber;
+    _phoneNumberController.text = _phoneNumber;
+
+    setState(() {
+      _countryCode = widget.user.countryCode;
+      if (_countryCode == '57') {
+        _countryName = 'Colombia (CO)';
+      } else {
+        _countryName = '';
+      }
+    });
+  }
+
+  void _changePassword() {
+    if (widget.user.loginType != 0) {
+      _validateUserSocial();
+      return;
+    }
+
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => ChangePasswordScreen(
+          token: widget.token, 
+        )
+      )
+    );
+  }
+
+  void _validateUserSocial() async {
+      await showAlertDialog(
+        context: context,
+        title: 'Error', 
+        message: 'Debes de realizar esta operación por la red social con la que iniciaste sesión.',
+        actions: <AlertDialogAction>[
+            AlertDialogAction(key: null, label: 'Aceptar'),
+        ]
+      );    
+  }
+  
+  Widget _showCountry() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: <Widget>[
+          ElevatedButton(
+            child: Text('Seleccionar País'),
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states) {
+                return Color(0xFFE03B8B);
+              }),
+            ),
+            onPressed: () => _selectCountry(),
+          ),
+          SizedBox(
+            width: 10,
+          ),
+          Text('$_countryCode $_countryName'),
+        ],
+      ),
+    );
+  }
+
+  void _selectCountry() {
+    showCountryPicker(
+      context: context,
+      onSelect: (Country country) {
+        setState(() {
+          _countryName = country.displayNameNoCountryCode;
+          _countryCode = country.phoneCode;
+        });
+      },
+    );
   }
 }
